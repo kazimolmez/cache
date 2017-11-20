@@ -1,0 +1,18 @@
+{
+    "name": "tt/cache",
+    "description": "php cache library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Samir Rustamov",
+            "email": "rustemovv96@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4":{
+          "TT\\":"src/"
+        }
+    }
+}
