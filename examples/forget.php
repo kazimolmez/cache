@@ -4,9 +4,9 @@
 require_once __DIR__ . '/bootstrap.php';
 
 
-use TT\Cache\Cache;
+use TT\Facade\Cache;
 
-$cache = new Cache();
+
 
 
 /*
@@ -16,7 +16,7 @@ $cache = new Cache();
 */
 
 
-$cache->forget ( 'name' );
+Cache::forget ( 'name' );
 
 
 //Callback

@@ -1,7 +1,7 @@
 <?php
 
 
-use TT\Cache\Cache;
+use TT\Facade\Cache;
 
 
 class CacheTest extends \PHPUnit_Framework_TestCase
@@ -10,35 +10,27 @@ class CacheTest extends \PHPUnit_Framework_TestCase
 
     public function testPut ()
     {
-        $cache = new Cache();
-
-        $this->assertEquals ( $cache->put ( 'library' , 'Cache Library' , 3600 ) , $cache );
+       Cache::put ( 'library' , 'Cache Library' , 3600 );
     }
 
 
     public function testGet ()
     {
-        $cache = new Cache();
-
-        $this->assertEquals ( $cache->get ( 'library' ) , 'Cache Library' );
+        $this->assertEquals ( Cache::get ( 'library' ) , 'Cache Library' );
     }
 
 
     public function testHas ()
     {
-        $cache = new Cache();
-
-        $this->assertTrue ( $cache->has ( 'library' ) );
+        $this->assertTrue ( Cache::has ( 'library' ) );
     }
 
 
     public function testForget ()
     {
-        $cache = new Cache();
+        Cache::forget ( 'library' );
 
-        $cache->forget ( 'library' );
-
-        $this->assertFalse ( $cache->has ( 'library' ) );
+        $this->assertFalse ( Cache::has ( 'library' ) );
 
     }
 

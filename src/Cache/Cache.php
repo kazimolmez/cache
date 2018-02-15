@@ -1,244 +1,159 @@
 <?php namespace TT\Cache;
 
 /**
+ * @package    TT
  * @author  Samir Rustamov <rustemovv96@gmail.com>
- * @link https://github.com/SamirRustamov/Cache
+ * @link https://github.com/SamirRustamov/TT
+ * @subpackage    Libraries
+ * @category    Cache
  */
 
+use TT\Cache\CacheStore;
+use TT\Cache\Drivers\FileStore;
+use TT\Cache\Drivers\DatabaseStore;
+use TT\Cache\Drivers\MemcacheStore;
+use TT\Cache\Drivers\RedisStore;
 
-use TT\Cache\CacheInterface;
-
-
-class Cache implements CacheInterface
+class Cache implements CacheStore
 {
 
 
-    private static $config;
+    private static $driver;
 
 
-    private $fullpath;
-
-
-    private $put     = false;
-
-
-    private $expires = 10;
-
-
-    /**
-     * Cache constructor.
-     */
-    function __construct()
+    function  __construct ()
     {
-      if(is_null(self::$config)) {
-        self::$config = array('files'=> BASEDIR.'/storage/cache');
-      }
+        if (is_null(self::$driver))
+        {
+            $driver = tt_config('cache.driver','file');
 
-    }
-
-
-    /**
-     * @param String $key
-     * @param $value
-     * @param Int $expires
-     * @return $this
-     */
-    public function put( String $key , $value , Int $expires = 10)
-    {
-
-
-      $this->expires  = $expires;
-
-      $this->put      = true;
-
-      $paths          = $this->getPaths($key);
-
-      $this->fullpath = $paths->fullpath;
-
-      if(!$this->has($key)) {
-        $this->createDir($paths);
-      }
-
-      if(is_callable($value)) {
-        $value = call_user_func($value,$this);
-      }
-
-      file_put_contents($paths->fullpath,serialize($value));
-
-      return $this;
-
-
-    }
-
-
-    /**
-     * @param String $key
-     * @param $value
-     * @return Cache
-     */
-    public function forever( String $key , $value )
-    {
-      return $this->put($key , $value , time());
-    }
-
-
-    /**
-     * @param $key
-     * @return bool
-     */
-    public function has( $key)
-    {
-      if(is_callable($key)) {
-        $key = call_user_func($key,$this);
-      }
-      return $this->existsExpires($this->getPaths($key));
-    }
-
-
-    /**
-     * @param $key
-     * @return bool|mixed
-     */
-    public function get( $key)
-    {
-      if(is_callable($key)) {
-        $key = call_user_func($key,$this);
-      }
-
-      $paths = $this->getPaths($key);
-
-      if($this->existsExpires($paths)) {
-          return unserialize(file_get_contents($paths->fullpath));
-      }
-      return false;
-    }
-
-
-    /**
-     * @param $key
-     * @return $this
-     */
-    public function forget( $key)
-    {
-      if(is_callable($key)) {
-        $key = call_user_func($key,$this);
-      }
-
-      $paths = $this->getPaths($key);
-
-      @unlink($paths->fullpath);
-
-      if (@rmdir(self::$config['files'].'/'.$paths->path1.'/'.$paths->path2)) {
-
-         @rmdir(self::$config['files'].'/'.$paths->path1);
-
-      }
-
-      return $this;
-
-    }
-
-
-    /**
-     * @param $paths
-     * @return mixed
-     */
-    private function createDir( $paths)
-    {
-
-      if(!file_exists($paths->fullpath)) {
-        if(!file_exists(self::$config['files'].'/'.$paths->path1.'/')) {
-           @mkdir(self::$config['files'].'/'.$paths->path1.'/',0755,false);
+            self::driver($driver);
         }
-        @mkdir(self::$config['files'].'/'.$paths->path1.'/'.$paths->path2.'/',0755,false);
-      }
-
-      return $paths->fullpath;
-
     }
 
 
-    /**
-     * @param Int $expires
-     * @return $this
-     */
-    public function expires( Int $expires)
+    public static function driver($driver)
     {
-      $this->expires = $expires;
 
-      return $this;
-    }
-
-
-    /**
-     * @param Int $minutes
-     * @return $this
-     */
-    public function minutes( Int $minutes)
-    {
-      $this->expires = $minutes * 60;
-
-      return $this;
-    }
-
-
-    /**
-     * @param $paths
-     * @return bool
-     */
-    private function existsExpires( $paths)
-    {
-      if(file_exists($paths->fullpath)) {
-        if(filemtime($paths->fullpath) <= time()) {
-           @unlink($paths->fullpath);
-           if (rmdir(self::$config['files'].'/'.$paths->path1.'/'.$paths->path2)) {
-                @rmdir(self::$config['files'].'/'.$paths->path1);
-           }
-           return false;
+        if (is_object($driver))
+        {
+          self::$driver = $driver;
         }
-        return true;
-      }
-      return false;
+        else
+        {
+          switch (strtolower($driver))
+          {
+              case 'file':
+                  self::$driver = new FileStore();
+                  break;
+              case 'database':
+                  self::$driver = new DatabaseStore();
+                  break;
+              case 'memcache':
+                  self::$driver = new MemcacheStore();
+                  break;
+              case 'redis':
+                  self::$driver = new RedisStore();
+                  break;
+              default:
+                  self::$driver = new FileStore();
+                  break;
+          }
+
+        }
+        return new static();
     }
 
 
-    /**
-     * @param $key
-     * @return object
-     */
-    private function getPaths( $key)
+    public function put(String $key , $value ,$expires = 10)
     {
-      $filename = sha1($key);
-
-      $path1    = substr($filename,0,2);
-
-      $path2    = substr($filename,-2);
-
-      $fullpath = self::$config['files'].'/'.$path1.'/'.$path2.'/'.$filename;
-
-      return (object) array('path1' => $path1,'path2' => $path2, 'fullpath' => $fullpath);
-
+        if (!is_string($value) && is_callable($value))
+        {
+            $value = call_user_func($value,$this);
+        }
+        return self::$driver->put($key , $value ,$expires);
     }
 
 
-    /**
-     * @param $key
-     * @return bool|mixed
-     */
-    public function __get( $key)
+
+    public function forever(String $key , $value )
     {
-      return $this->get($key);
+        return self::$driver->forever($key , $value);
     }
 
 
-    /**
-     *
-     */
+
+
+    public function has($key)
+    {
+        if (!is_string($key) && is_callable($key))
+        {
+            $key = call_user_func($key,$this);
+        }
+        return self::$driver->has($key);
+    }
+
+
+
+    public function get($key)
+    {
+        if (!is_string($key) && is_callable($key))
+        {
+            $key = call_user_func($key,$this);
+        }
+        return self::$driver->get($key);
+    }
+
+
+
+    public function forget($key)
+    {
+        if (!is_string($key) && is_callable($key))
+        {
+            $key = call_user_func($key,$this);
+        }
+        return self::$driver->forget($key);
+    }
+
+
+
+
+    public function expires(Int $expires)
+    {
+        return self::$driver->expires($expires);
+    }
+
+
+    public function minutes(Int $minutes)
+    {
+        return self::$driver->minutes($minutes);
+    }
+
+
+
+    public function flush ()
+    {
+        self::$driver->flush();
+    }
+
+
+
+    public function createDatabaseTable()
+    {
+        (new DatabaseStore())->createDatabaseTable();
+    }
+
+
+    public function __get($key)
+    {
+        return self::$driver->get($key);
+    }
+
+
+
     function __destruct()
     {
-      if($this->put) {
-        touch($this->fullpath , time()+ $this->expires);
-      }
+      //self::$driver->__destruct();
     }
 
 

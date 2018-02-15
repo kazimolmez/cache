@@ -5,9 +5,8 @@ require_once __DIR__.'/bootstrap.php';
 
 
 
-use TT\Cache\Cache;
+use TT\Facade\Cache;
 
-$cache = new Cache();
 
 /*
 |------------------------------------------------------
@@ -16,21 +15,21 @@ $cache = new Cache();
 */
 
 
-$cache->put('name','Samir',3600); // expires 3600 seconds
+Cache::put('name','Samir',3600); // expires 3600 seconds
 
 
 //set expires
 
 
-$cache->expires(3600)->put('expires','3600');
+Cache::expires(3600)->put('expires','3600');
 /*
 |OR
-| $cache->put('expires','3600')->expires(3600);
+| Cache::put('expires','3600')->expires(3600);
 */
 
 //set expires minutes
 
-$cache->put('expires-minutes',"60 minutes")->minutes(60);
+Cache::put('expires-minutes',"60 minutes")->minutes(60);
 
 
 
@@ -38,9 +37,9 @@ $cache->put('expires-minutes',"60 minutes")->minutes(60);
 
 
 
-$cache->put('name',function($cache){
-  if($cache->has('oldname')) {
-    return $cache->get('oldname');
+Cache::put('name',function($cache){
+  if(Cache::has('oldname')) {
+    return Cache::get('oldname');
   } else {
     return "Samir";
   }
@@ -48,4 +47,5 @@ $cache->put('name',function($cache){
 
 //Forever
 
-$cache->forever('name','Samir'); // expires forever
+Cache::forever('name','Samir'); // expires forever
+

@@ -4,9 +4,8 @@ ini_set('display_errors', 1);
 
 error_reporting(E_ALL);
 
-define('BASEDIR', dirname(__DIR__));
+define('DIR', dirname(__DIR__));
 
 
-require BASEDIR.'/vendor/autoload.php';
+require DIR.'/vendor/autoload.php';
 
-require_once BASEDIR.'/src/helper.php';

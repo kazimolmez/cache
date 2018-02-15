@@ -8,15 +8,15 @@ use TT\Facade\Cache;
 
 
 
+
 /*
 |------------------------------------------------------
-|  Has Cache Data Example
+|  Driver Example (database,file,redis,memcache)
 |------------------------------------------------------
 */
 
 
-if (Cache::has ( 'name' )) {
-    //
-} else {
-    //
-}
+Cache::driver('database')->put('name','Samir',100);
+
+Cache::forget('name');
+
