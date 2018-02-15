@@ -8,11 +8,16 @@
  * @category    Cache
  */
 
+
+
 use TT\Cache\CacheStore;
 use TT\Cache\Drivers\FileStore;
 use TT\Cache\Drivers\DatabaseStore;
 use TT\Cache\Drivers\MemcacheStore;
 use TT\Cache\Drivers\RedisStore;
+
+
+
 
 class Cache implements CacheStore
 {
@@ -35,7 +40,7 @@ class Cache implements CacheStore
     public static function driver($driver)
     {
 
-        if (is_object($driver))
+        if ($driver instanceof CacheStore)
         {
           self::$driver = $driver;
         }
@@ -155,8 +160,6 @@ class Cache implements CacheStore
     {
       //self::$driver->__destruct();
     }
-
-
 
 
 
