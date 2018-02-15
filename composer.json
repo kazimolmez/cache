@@ -1,5 +1,5 @@
 {
-    "name": "tt/cache",
+    "name": "srustamov/cache",
     "description": "php cache library",
     "type": "library",
     "license": "MIT",
